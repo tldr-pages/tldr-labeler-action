@@ -8298,9 +8298,27 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = exports.main = void 0;
+exports.run = exports.main = exports.getFileLabel = exports.labelType = exports.fileStatus = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
+const documentationRegex = /\.md$/i;
+const mainPageRegex = /^pages\//;
+const toolingRegex = /\.([jt]s|py|sh|yml)$/;
+const translationPageRegex = /^pages\.[a-z_]+\//i;
+exports.fileStatus = {
+    added: 'added',
+    modified: 'modified',
+    removed: 'removed',
+    renamed: 'renamed',
+};
+exports.labelType = {
+    documentation: 'documentation',
+    massChanges: 'mass changes',
+    newCommand: 'new command',
+    pageEdit: 'page edit',
+    tooling: 'tooling',
+    translation: 'translation',
+};
 const getChangedFiles = async (client, prNumber) => {
     const listFilesOptions = client.rest.pulls.listFiles.endpoint.merge({
         owner: github.context.repo.owner,
@@ -8334,6 +8352,27 @@ const removeLabels = async (client, prNumber, labels) => {
         name: label,
     })));
 };
+const getFileLabel = (file) => {
+    if (mainPageRegex.test(file.filename) || (file.previous_filename && mainPageRegex.test(file.previous_filename))) {
+        if (file.status === exports.fileStatus.added) {
+            return exports.labelType.newCommand;
+        }
+        if ([exports.fileStatus.modified, exports.fileStatus.removed, exports.fileStatus.renamed].includes(file.status)) {
+            return exports.labelType.pageEdit;
+        }
+    }
+    if (translationPageRegex.test(file.filename) || (file.previous_filename && translationPageRegex.test(file.previous_filename))) {
+        return exports.labelType.translation;
+    }
+    if (documentationRegex.test(file.filename)) {
+        return exports.labelType.documentation;
+    }
+    if (toolingRegex.test(file.filename)) {
+        return exports.labelType.tooling;
+    }
+    return null;
+};
+exports.getFileLabel = getFileLabel;
 const main = async () => {
     var _a;
     const token = core.getInput('token', { required: true });
@@ -8344,30 +8383,7 @@ const main = async () => {
     }
     const client = github.getOctokit(token);
     const changedFiles = await getChangedFiles(client, prNumber);
-    const labels = new Set();
-    const translatedPagePattern = /pages\.[a-z_]+/i;
-    const pagePattern = /pages(?:\.[a-z_]+)?/i;
-    const documentationPattern = /[a-z\-]+\.md/i;
-    const toolingPattern = /.*\.([jt]s|py|sh|yml)/i;
-    for (const file of changedFiles) {
-        if (pagePattern.test(file.filename) || (file.previous_filename && pagePattern.test(file.previous_filename))) {
-            if (translatedPagePattern.test(file.filename) || (file.previous_filename && translatedPagePattern.test(file.previous_filename))) {
-                labels.add('translation');
-            }
-            if (file.status === 'added') {
-                labels.add('new command');
-            }
-            else if (['modified', 'renamed', 'removed'].includes(file.status)) {
-                labels.add('page edit');
-            }
-        }
-        else if (documentationPattern.test(file.filename)) {
-            labels.add('documentation');
-        }
-        else if (toolingPattern.test(file.filename)) {
-            labels.add('tooling');
-        }
-    }
+    const labels = new Set(changedFiles.map(exports.getFileLabel).filter((label) => label));
     const prLabels = await getPrLabels(client, prNumber);
     const labelsToAdd = new Set([...labels].filter((label) => !prLabels.has(label)));
     const labelsToRemove = new Set([...prLabels].filter((label) => !labels.has(label)));

@@ -4,8 +4,9 @@
   "description": "Action to handle automatic PR labeling",
   "main": "dist/index.js",
   "scripts": {
+    "test": "jest",
     "build": "ncc build src/index.ts --out dist",
-    "test": "jest"
+    "prepare": "husky install"
   },
   "engines": {
     "node": "12.x",
@@ -29,9 +30,17 @@
     "@types/jest": "^27.0.3",
     "@types/node": "^12.20.37",
     "@vercel/ncc": "^0.32.0",
+    "husky": "^7.0.4",
     "jest": "^27.3.1",
     "ts-jest": "^27.0.7",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.2"
+  },
+  "jest": {
+    "clearMocks": true,
+    "coverageProvider": "v8",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    }
   }
 }
