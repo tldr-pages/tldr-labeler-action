@@ -26,6 +26,27 @@ interface PrMetadata {
   labels: PrLabel[]
 }
 
+const documentationRegex = /\.md$/i;
+const mainPageRegex = /^pages\//;
+const toolingRegex = /\.([jt]s|py|sh|yml)$/;
+const translationPageRegex = /^pages\.[a-z_]+\//i;
+
+export const fileStatus = {
+  added: 'added',
+  modified: 'modified',
+  removed: 'removed',
+  renamed: 'renamed',
+}
+
+export const labelType = {
+  documentation: 'documentation',
+  massChanges: 'mass changes',
+  newCommand: 'new command',
+  pageEdit: 'page edit',
+  tooling: 'tooling',
+  translation: 'translation',
+}
+
 const getChangedFiles = async (client: ClientType, prNumber: number) => {
   const listFilesOptions = client.rest.pulls.listFiles.endpoint.merge({
     owner: github.context.repo.owner,
@@ -76,6 +97,27 @@ const removeLabels = async (
   );
 };
 
+export const getFileLabel = (file: any): string|null => {
+  if (mainPageRegex.test(file.filename) || (file.previous_filename && mainPageRegex.test(file.previous_filename))) {
+    if (file.status === fileStatus.added) {
+      return labelType.newCommand;
+    }
+    if ([fileStatus.modified, fileStatus.removed, fileStatus.renamed].includes(file.status)) {
+      return labelType.pageEdit;
+    }
+  }
+  if (translationPageRegex.test(file.filename) || (file.previous_filename && translationPageRegex.test(file.previous_filename))) {
+    return labelType.translation;
+  }
+  if (documentationRegex.test(file.filename)) {
+    return labelType.documentation;
+  }
+  if (toolingRegex.test(file.filename)) {
+    return labelType.tooling;
+  }
+  return null;
+};
+
 export const main = async (): Promise<void> => {
   const token = core.getInput('token', { required: true });
 
@@ -88,27 +130,9 @@ export const main = async (): Promise<void> => {
   const client: ClientType = github.getOctokit(token);
   const changedFiles = await getChangedFiles(client, prNumber);
 
-  const labels = new Set<string>();
-  const translatedPagePattern = /pages\.[a-z_]+/i;
-  const pagePattern = /pages(?:\.[a-z_]+)?/i;
-  const documentationPattern = /[a-z\-]+\.md/i;
-  const toolingPattern = /.*\.([jt]s|py|sh|yml)/i;
-  for (const file of changedFiles) {
-    if (pagePattern.test(file.filename) || (file.previous_filename && pagePattern.test(file.previous_filename))) {
-      if (translatedPagePattern.test(file.filename) || (file.previous_filename && translatedPagePattern.test(file.previous_filename))) {
-        labels.add('translation');
-      }
-      if (file.status === 'added') {
-        labels.add('new command');
-      } else if (['modified', 'renamed', 'removed'].includes(file.status)) {
-        labels.add('page edit');
-      }
-    } else if (documentationPattern.test(file.filename)) {
-      labels.add('documentation');
-    } else if (toolingPattern.test(file.filename)) {
-      labels.add('tooling');
-    }
-  }
+  const labels = new Set<string>(
+    changedFiles.map(getFileLabel).filter((label) => label) as string[]
+  );
 
   const prLabels = await getPrLabels(client, prNumber);
   const labelsToAdd = new Set([...labels].filter((label) => !prLabels.has(label)));
