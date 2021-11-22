@@ -1,4 +1,4 @@
-import {getFileLabel, FileStatus, LabelType} from '../src/labeler';
+import {getFileLabel, FileStatus, LabelType} from './labeler';
 
 describe('getFileLabel', () => {
   describe('when a main page is added', () => {

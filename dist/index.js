@@ -8274,63 +8274,46 @@ function wrappy (fn, cb) {
 /***/ }),
 
 /***/ 8919:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = exports.main = exports.getFileLabel = exports.labelType = exports.fileStatus = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-const github = __importStar(__nccwpck_require__(5438));
+exports.run = exports.main = exports.getFileLabel = exports.LabelType = exports.FileStatus = void 0;
+const core_1 = __nccwpck_require__(2186);
+const github_1 = __nccwpck_require__(5438);
+var FileStatus;
+(function (FileStatus) {
+    FileStatus["added"] = "added";
+    FileStatus["modified"] = "modified";
+    FileStatus["removed"] = "removed";
+    FileStatus["renamed"] = "renamed";
+})(FileStatus = exports.FileStatus || (exports.FileStatus = {}));
+var LabelType;
+(function (LabelType) {
+    LabelType["documentation"] = "documentation";
+    LabelType["massChanges"] = "mass changes";
+    LabelType["newCommand"] = "new command";
+    LabelType["pageEdit"] = "page edit";
+    LabelType["tooling"] = "tooling";
+    LabelType["translation"] = "translation";
+})(LabelType = exports.LabelType || (exports.LabelType = {}));
 const documentationRegex = /\.md$/i;
 const mainPageRegex = /^pages\//;
 const toolingRegex = /\.([jt]s|py|sh|yml)$/;
 const translationPageRegex = /^pages\.[a-z_]+\//i;
-exports.fileStatus = {
-    added: 'added',
-    modified: 'modified',
-    removed: 'removed',
-    renamed: 'renamed',
-};
-exports.labelType = {
-    documentation: 'documentation',
-    massChanges: 'mass changes',
-    newCommand: 'new command',
-    pageEdit: 'page edit',
-    tooling: 'tooling',
-    translation: 'translation',
-};
 const getChangedFiles = async (client, prNumber) => {
     const listFilesOptions = client.rest.pulls.listFiles.endpoint.merge({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
         pull_number: prNumber,
     });
     return client.paginate(listFilesOptions);
 };
 const getPrLabels = async (client, prNumber) => {
     const getPrOptions = client.rest.pulls.get.endpoint.merge({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
         pull_number: prNumber,
     });
     const prResponse = await client.request(getPrOptions);
@@ -8338,52 +8321,52 @@ const getPrLabels = async (client, prNumber) => {
 };
 const addLabels = async (client, prNumber, labels) => {
     await client.rest.issues.addLabels({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
         issue_number: prNumber,
         labels: [...labels],
     });
 };
 const removeLabels = async (client, prNumber, labels) => {
     await Promise.all([...labels].map((label) => client.rest.issues.removeLabel({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
         issue_number: prNumber,
         name: label,
     })));
 };
 const getFileLabel = (file) => {
     if (mainPageRegex.test(file.filename) || (file.previous_filename && mainPageRegex.test(file.previous_filename))) {
-        if (file.status === exports.fileStatus.added) {
-            return exports.labelType.newCommand;
+        if (file.status === FileStatus.added) {
+            return LabelType.newCommand;
         }
-        if ([exports.fileStatus.modified, exports.fileStatus.removed, exports.fileStatus.renamed].includes(file.status)) {
-            return exports.labelType.pageEdit;
+        if ([FileStatus.modified, FileStatus.removed, FileStatus.renamed].includes(file.status)) {
+            return LabelType.pageEdit;
         }
     }
     if (translationPageRegex.test(file.filename) || (file.previous_filename && translationPageRegex.test(file.previous_filename))) {
-        return exports.labelType.translation;
+        return LabelType.translation;
     }
     if (documentationRegex.test(file.filename)) {
-        return exports.labelType.documentation;
+        return LabelType.documentation;
     }
     if (toolingRegex.test(file.filename)) {
-        return exports.labelType.tooling;
+        return LabelType.tooling;
     }
     return null;
 };
 exports.getFileLabel = getFileLabel;
 const main = async () => {
     var _a;
-    const token = core.getInput('token', { required: true });
-    const prNumber = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
+    const token = (0, core_1.getInput)('token', { required: true });
+    const prNumber = (_a = github_1.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
     if (!prNumber) {
         console.log('Could not determine PR number, skipping');
         return;
     }
-    const client = github.getOctokit(token);
+    const client = (0, github_1.getOctokit)(token);
     const changedFiles = await getChangedFiles(client, prNumber);
-    const labels = new Set(changedFiles.map(exports.getFileLabel).filter((label) => label));
+    const labels = new Set(changedFiles.map(file => (0, exports.getFileLabel)(file)).filter((label) => label));
     const prLabels = await getPrLabels(client, prNumber);
     const labelsToAdd = new Set([...labels].filter((label) => !prLabels.has(label)));
     const labelsToRemove = new Set([...prLabels].filter((label) => !labels.has(label)));
@@ -8402,8 +8385,8 @@ const run = async () => {
         await (0, exports.main)();
     }
     catch (err) {
-        core.error(err);
-        core.setFailed(err.message);
+        (0, core_1.error)(err);
+        (0, core_1.setFailed)(err.message);
     }
 };
 exports.run = run;
