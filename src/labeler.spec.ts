@@ -23,7 +23,7 @@ describe('getFileLabel', () => {
     it('should return page edit label', () => {
       expect(getFileLabel({
         filename: 'pages/osx/du.md',
-        status: fileStatus.modified,
+        status: fileStatus.removed,
       })).toBe(labelType.pageEdit);
     });
   });
@@ -38,29 +38,15 @@ describe('getFileLabel', () => {
     });
   });
 
-  describe('when a translation page is added', () => {
-    it('should return translation label', () => {
+  describe('returning a translation label', () => {
+    it.each([
+      [fileStatus.added],
+      [fileStatus.modified],
+      [fileStatus.removed],
+    ])('should return label when page is %s', (status) => {
       expect(getFileLabel({
-        filename: 'pages.de/common/git.md',
-        status: fileStatus.modified,
-      })).toBe(labelType.translation);
-    });
-  });
-
-  describe('when a translation page is modified', () => {
-    it('should return translation label', () => {
-      expect(getFileLabel({
-        filename: 'pages.es/common/7z.md',
-        status: fileStatus.modified,
-      })).toBe(labelType.translation);
-    });
-  });
-
-  describe('when a translation page is removed', () => {
-    it('should return translation label', () => {
-      expect(getFileLabel({
-        filename: 'pages.pt_BR/common/mkfs.btrfs.md',
-        status: fileStatus.modified,
+        fileName: 'pages.de/common/git.md',
+        status,
       })).toBe(labelType.translation);
     });
   });

@@ -97,7 +97,7 @@ const removeLabels = async (
   );
 };
 
-export const getFileLabel = (file: any): string|null => {
+export const getFileLabel = (file: PrFile): string|null => {
   if (mainPageRegex.test(file.filename) || (file.previous_filename && mainPageRegex.test(file.previous_filename))) {
     if (file.status === fileStatus.added) {
       return labelType.newCommand;
@@ -131,7 +131,7 @@ export const main = async (): Promise<void> => {
   const changedFiles = await getChangedFiles(client, prNumber);
 
   const labels = new Set<string>(
-    changedFiles.map(getFileLabel).filter((label) => label) as string[]
+    changedFiles.map(file => getFileLabel(file)).filter((label) => label) as string[]
   );
 
   const prLabels = await getPrLabels(client, prNumber);
