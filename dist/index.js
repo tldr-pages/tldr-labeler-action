@@ -8375,8 +8375,7 @@ const main = async () => {
         await addLabels(client, prNumber, labelsToAdd);
     }
     if (labelsToRemove.size) {
-        console.log(`Labels to remove: ${[...labelsToRemove].join(', ')}`);
-        await removeLabels(client, prNumber, labelsToRemove);
+        console.log(`Labels not added from this action: ${[...labelsToRemove].join(', ')}`);
     }
 };
 exports.main = main;
