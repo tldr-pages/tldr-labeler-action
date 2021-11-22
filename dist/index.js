@@ -8302,33 +8302,33 @@ const documentationRegex = /\.md$/i;
 const mainPageRegex = /^pages\//;
 const toolingRegex = /\.([jt]s|py|sh|yml)$/;
 const translationPageRegex = /^pages\.[a-z_]+\//i;
-const getChangedFiles = async (client, prNumber) => {
-    const listFilesOptions = client.rest.pulls.listFiles.endpoint.merge({
+const getChangedFiles = async (octokit, prNumber) => {
+    const listFilesOptions = octokit.rest.pulls.listFiles.endpoint.merge({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
         pull_number: prNumber,
     });
-    return client.paginate(listFilesOptions);
+    return octokit.paginate(listFilesOptions);
 };
-const getPrLabels = async (client, prNumber) => {
-    const getPrOptions = client.rest.pulls.get.endpoint.merge({
+const getPrLabels = async (octokit, prNumber) => {
+    const getPrOptions = octokit.rest.pulls.get.endpoint.merge({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
         pull_number: prNumber,
     });
-    const prResponse = await client.request(getPrOptions);
+    const prResponse = await octokit.request(getPrOptions);
     return new Set(prResponse.data.labels.map((label) => label.name));
 };
-const addLabels = async (client, prNumber, labels) => {
-    await client.rest.issues.addLabels({
+const addLabels = async (octokit, prNumber, labels) => {
+    await octokit.rest.issues.addLabels({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
         issue_number: prNumber,
         labels: [...labels],
     });
 };
-const removeLabels = async (client, prNumber, labels) => {
-    await Promise.all([...labels].map((label) => client.rest.issues.removeLabel({
+const removeLabels = async (octokit, prNumber, labels) => {
+    await Promise.all([...labels].map((label) => octokit.rest.issues.removeLabel({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
         issue_number: prNumber,
@@ -8364,15 +8364,15 @@ const main = async () => {
         console.log('Could not determine PR number, skipping');
         return;
     }
-    const client = (0, github_1.getOctokit)(token);
-    const changedFiles = await getChangedFiles(client, prNumber);
+    const octokit = (0, github_1.getOctokit)(token);
+    const changedFiles = await getChangedFiles(octokit, prNumber);
     const labels = new Set(changedFiles.map(file => (0, exports.getFileLabel)(file)).filter((label) => label));
-    const prLabels = await getPrLabels(client, prNumber);
+    const prLabels = await getPrLabels(octokit, prNumber);
     const labelsToAdd = new Set([...labels].filter((label) => !prLabels.has(label)));
     const labelsToRemove = new Set([...prLabels].filter((label) => !labels.has(label)));
     if (labelsToAdd.size) {
         console.log(`Labels to add: ${[...labelsToAdd].join(', ')}`);
-        await addLabels(client, prNumber, labelsToAdd);
+        await addLabels(octokit, prNumber, labelsToAdd);
     }
     if (labelsToRemove.size) {
         console.log(`Labels not added from this action: ${[...labelsToRemove].join(', ')}`);

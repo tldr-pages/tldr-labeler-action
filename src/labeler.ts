@@ -1,7 +1,7 @@
 import {getInput, error, setFailed} from '@actions/core';
 import {context, getOctokit} from '@actions/github';
 
-type ClientType = ReturnType<typeof getOctokit>;
+type Octokit = ReturnType<typeof getOctokit>;
 
 export enum FileStatus {
   added = 'added',
@@ -41,32 +41,32 @@ const mainPageRegex = /^pages\//;
 const toolingRegex = /\.([jt]s|py|sh|yml)$/;
 const translationPageRegex = /^pages\.[a-z_]+\//i;
 
-const getChangedFiles = async (client: ClientType, prNumber: number) => {
-  const listFilesOptions = client.rest.pulls.listFiles.endpoint.merge({
+const getChangedFiles = async (octokit: Octokit, prNumber: number) => {
+  const listFilesOptions = octokit.rest.pulls.listFiles.endpoint.merge({
     owner: context.repo.owner,
     repo: context.repo.repo,
     pull_number: prNumber,
   });
-  return client.paginate<PrFile>(listFilesOptions);
+  return octokit.paginate<PrFile>(listFilesOptions);
 };
 
-const getPrLabels = async (client: ClientType, prNumber: number): Promise<Set<string>> => {
-  const getPrOptions = client.rest.pulls.get.endpoint.merge({
+const getPrLabels = async (octokit: Octokit, prNumber: number): Promise<Set<string>> => {
+  const getPrOptions = octokit.rest.pulls.get.endpoint.merge({
     owner: context.repo.owner,
     repo: context.repo.repo,
     pull_number: prNumber,
   });
 
-  const prResponse = await client.request<PrMetadata>(getPrOptions);
+  const prResponse = await octokit.request<PrMetadata>(getPrOptions);
   return new Set(prResponse.data.labels.map((label) => label.name));
 };
 
 const addLabels = async (
-  client: ClientType,
+  octokit: Octokit,
   prNumber: number,
   labels: Set<string>,
 ): Promise<void> => {
-  await client.rest.issues.addLabels({
+  await octokit.rest.issues.addLabels({
     owner: context.repo.owner,
     repo: context.repo.repo,
     issue_number: prNumber,
@@ -75,13 +75,13 @@ const addLabels = async (
 };
 
 const removeLabels = async (
-  client: ClientType,
+  octokit: Octokit,
   prNumber: number,
   labels: Set<string>,
 ): Promise<void> => {
   await Promise.all(
     [...labels].map((label) =>
-      client.rest.issues.removeLabel({
+      octokit.rest.issues.removeLabel({
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: prNumber,
@@ -121,20 +121,20 @@ export const main = async (): Promise<void> => {
     return;
   }
 
-  const client: ClientType = getOctokit(token);
-  const changedFiles = await getChangedFiles(client, prNumber);
+  const octokit: Octokit = getOctokit(token);
+  const changedFiles = await getChangedFiles(octokit, prNumber);
 
   const labels = new Set<string>(
     changedFiles.map(file => getFileLabel(file)).filter((label) => label) as string[]
   );
 
-  const prLabels = await getPrLabels(client, prNumber);
+  const prLabels = await getPrLabels(octokit, prNumber);
   const labelsToAdd = new Set([...labels].filter((label) => !prLabels.has(label)));
   const labelsToRemove = new Set([...prLabels].filter((label) => !labels.has(label)));
 
   if (labelsToAdd.size) {
     console.log(`Labels to add: ${[...labelsToAdd].join(', ')}`)
-    await addLabels(client, prNumber, labelsToAdd);
+    await addLabels(octokit, prNumber, labelsToAdd);
   }
   if (labelsToRemove.size) {
     console.log(`Labels not added from this action: ${[...labelsToRemove].join(', ')}`)
