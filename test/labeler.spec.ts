@@ -1,12 +1,12 @@
-const {getFileLabel, fileStatus, labelType} = require('./labeler')
+import {getFileLabel, FileStatus, LabelType} from '../src/labeler';
 
 describe('getFileLabel', () => {
   describe('when a main page is added', () => {
     it('should return new command label', () => {
       expect(getFileLabel({
         filename: 'pages/common/cat.md',
-        status: fileStatus.added,
-      })).toBe(labelType.newCommand);
+        status: FileStatus.added,
+      })).toBe(LabelType.newCommand);
     });
   });
 
@@ -14,8 +14,8 @@ describe('getFileLabel', () => {
     it('should return page edit label', () => {
       expect(getFileLabel({
         filename: 'pages/windows/dir.md',
-        status: fileStatus.modified,
-      })).toBe(labelType.pageEdit);
+        status: FileStatus.modified,
+      })).toBe(LabelType.pageEdit);
     });
   });
 
@@ -23,8 +23,8 @@ describe('getFileLabel', () => {
     it('should return page edit label', () => {
       expect(getFileLabel({
         filename: 'pages/osx/du.md',
-        status: fileStatus.removed,
-      })).toBe(labelType.pageEdit);
+        status: FileStatus.removed,
+      })).toBe(LabelType.pageEdit);
     });
   });
 
@@ -33,21 +33,21 @@ describe('getFileLabel', () => {
       expect(getFileLabel({
         previous_filename: 'pages/linux/ls.md',
         filename: 'pages/common/ls.md',
-        status: fileStatus.renamed,
-      })).toBe(labelType.pageEdit);
+        status: FileStatus.renamed,
+      })).toBe(LabelType.pageEdit);
     });
   });
 
   describe('returning a translation label', () => {
     it.each([
-      [fileStatus.added],
-      [fileStatus.modified],
-      [fileStatus.removed],
-    ])('should return label when page is %s', (status) => {
+      [FileStatus.added],
+      [FileStatus.modified],
+      [FileStatus.removed],
+    ])('should return label when page is %s', (status: FileStatus) => {
       expect(getFileLabel({
-        fileName: 'pages.de/common/git.md',
+        filename: 'pages.de/common/git.md',
         status,
-      })).toBe(labelType.translation);
+      })).toBe(LabelType.translation);
     });
   });
 
@@ -55,8 +55,8 @@ describe('getFileLabel', () => {
     it('should return documentation label', () => {
       expect(getFileLabel({
         filename: 'contributing-guides/maintainers-guide.md',
-        status: fileStatus.added,
-      })).toBe(labelType.documentation);
+        status: FileStatus.added,
+      })).toBe(LabelType.documentation);
     });
   });
 
@@ -64,8 +64,8 @@ describe('getFileLabel', () => {
     it('should return documentation label', () => {
       expect(getFileLabel({
         filename: 'README.md',
-        status: fileStatus.modified,
-      })).toBe(labelType.documentation);
+        status: FileStatus.modified,
+      })).toBe(LabelType.documentation);
     });
   });
 
@@ -73,8 +73,8 @@ describe('getFileLabel', () => {
     it('should return tooling label', () => {
       expect(getFileLabel({
         filename: 'scripts/set-alias-page.py',
-        status: fileStatus.added,
-      })).toBe(labelType.tooling);
+        status: FileStatus.added,
+      })).toBe(LabelType.tooling);
     });
   });
 
@@ -82,8 +82,8 @@ describe('getFileLabel', () => {
     it('should return tooling label', () => {
       expect(getFileLabel({
         filename: 'scripts/set-more-info-link.py',
-        status: fileStatus.modified,
-      })).toBe(labelType.tooling);
+        status: FileStatus.modified,
+      })).toBe(LabelType.tooling);
     });
   });
 
@@ -91,8 +91,8 @@ describe('getFileLabel', () => {
     it('should return tooling label', () => {
       expect(getFileLabel({
         filename: 'scripts/build-index.js',
-        status: fileStatus.modified,
-      })).toBe(labelType.tooling);
+        status: FileStatus.modified,
+      })).toBe(LabelType.tooling);
     });
   });
 
@@ -100,8 +100,8 @@ describe('getFileLabel', () => {
     it('should return tooling label', () => {
       expect(getFileLabel({
         filename: 'scripts/build.sh',
-        status: fileStatus.added,
-      })).toBe(labelType.tooling);
+        status: FileStatus.added,
+      })).toBe(LabelType.tooling);
     });
   });
 
@@ -109,8 +109,8 @@ describe('getFileLabel', () => {
     it('should return tooling label', () => {
       expect(getFileLabel({
         filename: 'scripts/test.sh',
-        status: fileStatus.modified,
-      })).toBe(labelType.tooling);
+        status: FileStatus.modified,
+      })).toBe(LabelType.tooling);
     });
   });
 });
