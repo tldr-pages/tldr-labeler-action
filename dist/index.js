@@ -8279,9 +8279,10 @@ function wrappy (fn, cb) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = exports.main = exports.getFileLabel = exports.uniq = exports.LabelType = exports.FileStatus = void 0;
+exports.run = exports.main = exports.getFileLabel = exports.LabelType = exports.FileStatus = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
+const util_1 = __nccwpck_require__(2629);
 var FileStatus;
 (function (FileStatus) {
     FileStatus["added"] = "added";
@@ -8305,8 +8306,6 @@ const documentationRegex = /\.md$/i;
 const mainPageRegex = /^pages\//;
 const toolingRegex = /\.([jt]s|py|sh|yml)$/;
 const translationPageRegex = /^pages\.[a-z_]+\//i;
-const uniq = (array) => Array.from(new Set(array));
-exports.uniq = uniq;
 const getChangedFiles = async (octokit, prNumber) => {
     const listFilesOptions = octokit.rest.pulls.listFiles.endpoint.merge({
         owner: github_1.context.repo.owner,
@@ -8322,7 +8321,7 @@ const getPrLabels = async (octokit, prNumber) => {
         pull_number: prNumber,
     });
     const prResponse = await octokit.request(getPrOptions);
-    return (0, exports.uniq)(prResponse.data.labels.map((label) => label.name));
+    return (0, util_1.uniq)(prResponse.data.labels.map((label) => label.name));
 };
 const addLabels = async (octokit, prNumber, labels) => {
     await octokit.rest.issues.addLabels({
@@ -8374,7 +8373,7 @@ const main = async () => {
     }
     const octokit = (0, github_1.getOctokit)(token);
     const changedFiles = await getChangedFiles(octokit, prNumber);
-    const labels = (0, exports.uniq)(changedFiles.map(file => (0, exports.getFileLabel)(file)).filter((label) => label !== null));
+    const labels = (0, util_1.uniq)(changedFiles.map(file => (0, exports.getFileLabel)(file)).filter((label) => label !== null));
     const prLabels = await getPrLabels(octokit, prNumber);
     const labelsToAdd = labels.filter((label) => !prLabels.includes(label));
     const extraPrLabels = prLabels.filter((label) => !labels.includes(label));
@@ -8398,6 +8397,24 @@ const run = async () => {
     }
 };
 exports.run = run;
+
+
+/***/ }),
+
+/***/ 2629:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.uniq = void 0;
+/**
+ * Creates a duplicate-free version of an array.
+ * @param array {Array} The array to inspect.
+ * @returns {Array} The new duplicate free array.
+ */
+const uniq = (array) => Array.from(new Set(array));
+exports.uniq = uniq;
 
 
 /***/ }),

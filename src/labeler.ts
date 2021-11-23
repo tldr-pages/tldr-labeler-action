@@ -1,5 +1,6 @@
 import {getInput, error, setFailed} from '@actions/core';
 import {context, getOctokit} from '@actions/github';
+import {uniq} from './util'
 
 type Octokit = ReturnType<typeof getOctokit>;
 
@@ -43,8 +44,6 @@ const documentationRegex = /\.md$/i;
 const mainPageRegex = /^pages\//;
 const toolingRegex = /\.([jt]s|py|sh|yml)$/;
 const translationPageRegex = /^pages\.[a-z_]+\//i;
-
-export const uniq = <T>(array: T[]): T[] => Array.from(new Set<T>(array));
 
 const getChangedFiles = async (octokit: Octokit, prNumber: number) => {
   const listFilesOptions = octokit.rest.pulls.listFiles.endpoint.merge({
