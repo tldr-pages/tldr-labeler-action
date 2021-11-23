@@ -1,4 +1,11 @@
-import {FileStatus, getFileLabel, LabelType} from './labeler';
+import {FileStatus, getFileLabel, LabelType, uniq} from './labeler';
+
+describe('uniq', () => {
+  it('should return an array with unique values', () => {
+    const unique = uniq([LabelType.newCommand, LabelType.newCommand, LabelType.translation]);
+    expect(unique).toEqual([LabelType.newCommand, LabelType.translation]);
+  });
+})
 
 describe('getFileLabel', () => {
   describe('when a main page is changed', () => {

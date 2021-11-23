@@ -17,6 +17,7 @@ export enum LabelType {
   pageEdit = 'page edit',
   tooling = 'tooling',
   translation = 'translation',
+  waiting = 'waiting',
 }
 
 export interface PrFile {
@@ -41,6 +42,8 @@ const mainPageRegex = /^pages\//;
 const toolingRegex = /\.([jt]s|py|sh|yml)$/;
 const translationPageRegex = /^pages\.[a-z_]+\//i;
 
+export const uniq = <T>(array: T[]): T[] => Array.from(new Set<T>(array));
+
 const getChangedFiles = async (octokit: Octokit, prNumber: number) => {
   const listFilesOptions = octokit.rest.pulls.listFiles.endpoint.merge({
     owner: context.repo.owner,
@@ -50,7 +53,7 @@ const getChangedFiles = async (octokit: Octokit, prNumber: number) => {
   return octokit.paginate<PrFile>(listFilesOptions);
 };
 
-const getPrLabels = async (octokit: Octokit, prNumber: number): Promise<Set<string>> => {
+const getPrLabels = async (octokit: Octokit, prNumber: number): Promise<string[]> => {
   const getPrOptions = octokit.rest.pulls.get.endpoint.merge({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -58,34 +61,34 @@ const getPrLabels = async (octokit: Octokit, prNumber: number): Promise<Set<stri
   });
 
   const prResponse = await octokit.request<PrMetadata>(getPrOptions);
-  return new Set(prResponse.data.labels.map((label) => label.name));
+  return uniq(prResponse.data.labels.map((label) => label.name));
 };
 
 const addLabels = async (
   octokit: Octokit,
   prNumber: number,
-  labels: Set<string>,
+  labels: string[],
 ): Promise<void> => {
   await octokit.rest.issues.addLabels({
     owner: context.repo.owner,
     repo: context.repo.repo,
     issue_number: prNumber,
-    labels: [...labels],
+    labels,
   });
 };
 
 const removeLabels = async (
   octokit: Octokit,
   prNumber: number,
-  labels: Set<string>,
+  labels: string[],
 ): Promise<void> => {
   await Promise.all(
-    [...labels].map((label) =>
+    labels.map((name) =>
       octokit.rest.issues.removeLabel({
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: prNumber,
-        name: label,
+        name,
       })
     )
   );
@@ -124,20 +127,21 @@ export const main = async (): Promise<void> => {
   const octokit: Octokit = getOctokit(token);
   const changedFiles = await getChangedFiles(octokit, prNumber);
 
-  const labels = new Set<string>(
-    changedFiles.map(file => getFileLabel(file)).filter((label) => label) as string[]
+  const labels = uniq(
+    changedFiles.map(file => getFileLabel(file)).filter((label) => label !== null) as string[]
   );
 
   const prLabels = await getPrLabels(octokit, prNumber);
-  const labelsToAdd = new Set([...labels].filter((label) => !prLabels.has(label)));
-  const labelsToRemove = new Set([...prLabels].filter((label) => !labels.has(label)));
+  const labelsToAdd = labels.filter((label) => !prLabels.includes(label));
+  const extraPrLabels = prLabels.filter((label) => !labels.includes(label));
 
-  if (labelsToAdd.size) {
-    console.log(`Labels to add: ${[...labelsToAdd].join(', ')}`)
+  if (labelsToAdd.length) {
+    console.log(`Labels to add: ${labelsToAdd.join(', ')}`)
     await addLabels(octokit, prNumber, labelsToAdd);
   }
-  if (labelsToRemove.size) {
-    console.log(`Labels not added from this action: ${[...labelsToRemove].join(', ')}`)
+  if (extraPrLabels.includes(LabelType.waiting)) {
+    console.log(`Labels to remove: ${LabelType.waiting}`)
+    await removeLabels(octokit, prNumber, [LabelType.waiting]);
   }
 };
 
