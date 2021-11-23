@@ -8291,6 +8291,7 @@ var FileStatus;
 })(FileStatus = exports.FileStatus || (exports.FileStatus = {}));
 var LabelType;
 (function (LabelType) {
+    LabelType["community"] = "community";
     LabelType["documentation"] = "documentation";
     LabelType["massChanges"] = "mass changes";
     LabelType["newCommand"] = "new command";
@@ -8299,6 +8300,7 @@ var LabelType;
     LabelType["translation"] = "translation";
     LabelType["waiting"] = "waiting";
 })(LabelType = exports.LabelType || (exports.LabelType = {}));
+const communityRegex = /^MAINTAINERS\.md$/;
 const documentationRegex = /\.md$/i;
 const mainPageRegex = /^pages\//;
 const toolingRegex = /\.([jt]s|py|sh|yml)$/;
@@ -8349,6 +8351,9 @@ const getFileLabel = (file) => {
     }
     if (translationPageRegex.test(file.filename) || (file.previous_filename && translationPageRegex.test(file.previous_filename))) {
         return LabelType.translation;
+    }
+    if (communityRegex.test(file.filename)) {
+        return LabelType.community;
     }
     if (documentationRegex.test(file.filename)) {
         return LabelType.documentation;

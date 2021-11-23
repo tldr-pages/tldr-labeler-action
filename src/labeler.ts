@@ -11,6 +11,7 @@ export enum FileStatus {
 }
 
 export enum LabelType {
+  community = 'community',
   documentation = 'documentation',
   massChanges = 'mass changes',
   newCommand = 'new command',
@@ -37,6 +38,7 @@ export interface PrMetadata {
   labels: PrLabel[]
 }
 
+const communityRegex = /^MAINTAINERS\.md$/;
 const documentationRegex = /\.md$/i;
 const mainPageRegex = /^pages\//;
 const toolingRegex = /\.([jt]s|py|sh|yml)$/;
@@ -105,6 +107,9 @@ export const getFileLabel = (file: PrFile): string|null => {
   }
   if (translationPageRegex.test(file.filename) || (file.previous_filename && translationPageRegex.test(file.previous_filename))) {
     return LabelType.translation;
+  }
+  if (communityRegex.test(file.filename)) {
+    return LabelType.community;
   }
   if (documentationRegex.test(file.filename)) {
     return LabelType.documentation;

@@ -48,6 +48,22 @@ describe('getFileLabel', () => {
     });
   });
 
+  describe('when the maintainers file is changed', () => {
+    describe.each([
+      FileStatus.added,
+      FileStatus.modified,
+      FileStatus.removed,
+      FileStatus.renamed
+    ])('and the status is %s', (status: FileStatus) => {
+      it('should return community label', () => {
+        expect(getFileLabel({
+          filename: 'MAINTAINERS.md',
+          status,
+        })).toBe(LabelType.community);
+      });
+    });
+  });
+
   describe('when a Markdown file is changed', () => {
     describe.each([
       FileStatus.added,
