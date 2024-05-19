@@ -9,8 +9,8 @@
     "prepare": "husky install"
   },
   "engines": {
-    "node": ">=16",
-    "npm": ">=8"
+    "node": ">=20",
+    "npm": ">=9"
   },
   "repository": {
     "type": "git",
