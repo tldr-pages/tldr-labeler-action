@@ -41,7 +41,10 @@ describe('getFileLabel', () => {
     });
   });
 
-  describe('when the maintainers file is changed', () => {
+  describe.each([
+    'MAINTAINERS.md',
+    '.github/CODEOWNERS'
+  ])('when the %s file is changed', (filename: string) => {
     describe.each([
       FileStatus.added,
       FileStatus.modified,
@@ -50,7 +53,7 @@ describe('getFileLabel', () => {
     ])('and the status is %s', (status: FileStatus) => {
       it('should return community label', () => {
         expect(getFileLabel({
-          filename: 'MAINTAINERS.md',
+          filename,
           status,
         })).toBe(LabelType.community);
       });
@@ -78,7 +81,8 @@ describe('getFileLabel', () => {
       ['Bash', 'scripts/test.sh'],
       ['JavaScript', 'scripts/build-index.js'],
       ['Python', 'scripts/set-more-info-link.py'],
-      ['Yaml', '.github/workflows/ci.yml']
+      ['Yaml', '.github/workflows/ci.yml'],
+      ['JSON', 'package.json']
     ]
   )('when a %s file is changed', (_, filename: string) => {
     describe.each([

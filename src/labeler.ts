@@ -39,10 +39,10 @@ export interface PrMetadata {
   labels: PrLabel[]
 }
 
-const communityRegex = /^MAINTAINERS\.md$/;
+const communityRegex = /^MAINTAINERS\.md$|^\.github\/CODEOWNERS$/;
 const documentationRegex = /\.md$/i;
 const mainPageRegex = /^pages\//;
-const toolingRegex = /\.([jt]s|py|sh|yml)$/;
+const toolingRegex = /\.([jt]s|py|sh|yml|json)$/;
 const translationPageRegex = /^pages\.[a-z_]+\//i;
 
 const getChangedFiles = async (octokit: Octokit, prNumber: number) => {
@@ -107,13 +107,13 @@ export const getFileLabel = (file: PrFile): string|null => {
   if (translationPageRegex.test(file.filename) || (file.previous_filename && translationPageRegex.test(file.previous_filename))) {
     return LabelType.translation;
   }
-  if (communityRegex.test(file.filename)) {
+  if (communityRegex.test(file.filename) || (file.previous_filename && communityRegex.test(file.previous_filename))) {
     return LabelType.community;
   }
-  if (documentationRegex.test(file.filename)) {
+  if (documentationRegex.test(file.filename) || (file.previous_filename && documentationRegex.test(file.previous_filename))) {
     return LabelType.documentation;
   }
-  if (toolingRegex.test(file.filename)) {
+  if (toolingRegex.test(file.filename) || (file.previous_filename && toolingRegex.test(file.previous_filename))) {
     return LabelType.tooling;
   }
   return null;
