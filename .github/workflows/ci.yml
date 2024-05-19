@@ -6,7 +6,6 @@ jobs:
   ci:
     name: CI
     runs-on: ubuntu-latest
-
     steps:
 
     - uses: actions/checkout@v4
@@ -24,5 +23,5 @@ jobs:
     - name: Test
       run: npm run test
 
-    - name: Test
+    - name: Build
       run: npm run build
