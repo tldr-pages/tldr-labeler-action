@@ -119,6 +119,17 @@ export const getFileLabel = (file: PrFile): string|null => {
   return null;
 };
 
+export const getMassChangesLabel = (changedFiles: PrFile[]): string | null => {
+  const pageEdits = changedFiles.filter(file => mainPageRegex.test(file.filename)).length;
+  const translations = changedFiles.filter(file => translationPageRegex.test(file.filename)).length;
+
+  if (pageEdits > 5 || translations > 10) {
+    return LabelType.massChanges;
+  }
+
+  return null;
+};
+
 export const main = async (): Promise<void> => {
   const token = getInput('token', { required: true });
 
@@ -134,6 +145,11 @@ export const main = async (): Promise<void> => {
   const labels = uniq(
     changedFiles.map(file => getFileLabel(file)).filter((label) => label !== null) as string[]
   );
+
+  const massChangesLabel = getMassChangesLabel(changedFiles);
+  if (massChangesLabel) {
+    labels.push(massChangesLabel);
+  }
 
   const prLabels = await getPrLabels(octokit, prNumber);
   const labelsToAdd = labels.filter((label) => !prLabels.includes(label));
