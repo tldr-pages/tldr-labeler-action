@@ -1,4 +1,4 @@
-import {FileStatus, getFileLabel, LabelType} from './labeler';
+import {FileStatus, getFileLabel, getMassChangesLabel, LabelType} from './labeler';
 
 describe('getFileLabel', () => {
   describe('when a main page is changed', () => {
@@ -98,5 +98,25 @@ describe('getFileLabel', () => {
         })).toBe(LabelType.tooling);
       });
     });
+  });
+});
+
+describe('getMassChangesLabel', () => {
+  it('should return mass changes label for more than 5 page edits', () => {
+    const changedFiles = Array(6).fill({ filename: 'pages/common/cat.md', status: FileStatus.modified });
+    expect(getMassChangesLabel(changedFiles)).toBe(LabelType.massChanges);
+  });
+
+  it('should return mass changes label for more than 10 translations', () => {
+    const changedFiles = Array(11).fill({ filename: 'pages.de/common/git.md', status: FileStatus.modified });
+    expect(getMassChangesLabel(changedFiles)).toBe(LabelType.massChanges);
+  });
+
+  it('should return null for less than 5 page edits and 10 translations', () => {
+    const changedFiles = [
+      ...Array(5).fill({ filename: 'pages/common/cat.md', status: FileStatus.modified }),
+      ...Array(10).fill({ filename: 'pages.de/common/git.md', status: FileStatus.modified })
+    ];
+    expect(getMassChangesLabel(changedFiles)).toBeNull();
   });
 });
