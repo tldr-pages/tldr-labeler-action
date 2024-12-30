@@ -18,7 +18,8 @@ export enum LabelType {
   newCommand = 'new command',
   pageEdit = 'page edit',
   tooling = 'tooling',
-  translation = 'translation',
+  newTranslation = 'new translation',
+  translationEdit = 'translation edit',
   waiting = 'waiting',
 }
 
@@ -105,7 +106,12 @@ export const getFileLabel = (file: PrFile): string|null => {
     }
   }
   if (translationPageRegex.test(file.filename) || (file.previous_filename && translationPageRegex.test(file.previous_filename))) {
-    return LabelType.translation;
+    if (file.status === FileStatus.added) {
+      return LabelType.newTranslation;
+    }
+    if ([FileStatus.modified, FileStatus.removed, FileStatus.renamed].includes(file.status)) {
+      return LabelType.translationEdit;
+    }
   }
   if (communityRegex.test(file.filename) || (file.previous_filename && communityRegex.test(file.previous_filename))) {
     return LabelType.community;

@@ -26,17 +26,25 @@ describe('getFileLabel', () => {
   });
 
   describe('when a translation page is changed', () => {
+    describe('and the status is added', () => {
+      it('should return new command label', () => {
+        expect(getFileLabel({
+          filename: 'pages.de/common/git.md',
+          status: FileStatus.added,
+        })).toBe(LabelType.newTranslation);
+      });
+    });
+
     describe.each([
-      FileStatus.added,
       FileStatus.modified,
       FileStatus.removed,
-      FileStatus.renamed
+      FileStatus.renamed,
     ])('and the status is %s', (status: FileStatus) => {
-      it('should return translation label', () => {
+      it('should return translation edit label', () => {
         expect(getFileLabel({
           filename: 'pages.de/common/git.md',
           status,
-        })).toBe(LabelType.translation);
+        })).toBe(LabelType.translationEdit);
       });
     });
   });

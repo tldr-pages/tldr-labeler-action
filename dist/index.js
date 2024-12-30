@@ -2758,7 +2758,7 @@ class HttpClient {
         }
         const usingSsl = parsedUrl.protocol === 'https:';
         proxyAgent = new undici_1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
-            token: `${proxyUrl.username}:${proxyUrl.password}`
+            token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString('base64')}`
         })));
         this._proxyAgentDispatcher = proxyAgent;
         if (usingSsl && this._ignoreSslError) {
@@ -2872,11 +2872,11 @@ function getProxyUrl(reqUrl) {
     })();
     if (proxyVar) {
         try {
-            return new URL(proxyVar);
+            return new DecodedURL(proxyVar);
         }
         catch (_a) {
             if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
-                return new URL(`http://${proxyVar}`);
+                return new DecodedURL(`http://${proxyVar}`);
         }
     }
     else {
@@ -2934,6 +2934,19 @@ function isLoopbackAddress(host) {
         hostLower.startsWith('127.') ||
         hostLower.startsWith('[::1]') ||
         hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+}
+class DecodedURL extends URL {
+    constructor(url, base) {
+        super(url, base);
+        this._decodedUsername = decodeURIComponent(super.username);
+        this._decodedPassword = decodeURIComponent(super.password);
+    }
+    get username() {
+        return this._decodedUsername;
+    }
+    get password() {
+        return this._decodedPassword;
+    }
 }
 //# sourceMappingURL=proxy.js.map
 
@@ -29919,7 +29932,8 @@ var LabelType;
     LabelType["newCommand"] = "new command";
     LabelType["pageEdit"] = "page edit";
     LabelType["tooling"] = "tooling";
-    LabelType["translation"] = "translation";
+    LabelType["newTranslation"] = "new translation";
+    LabelType["translationEdit"] = "translation edit";
     LabelType["waiting"] = "waiting";
 })(LabelType || (exports.LabelType = LabelType = {}));
 const communityRegex = /^MAINTAINERS\.md$|^\.github\/CODEOWNERS$/;
@@ -29970,7 +29984,12 @@ const getFileLabel = (file) => {
         }
     }
     if (translationPageRegex.test(file.filename) || (file.previous_filename && translationPageRegex.test(file.previous_filename))) {
-        return LabelType.translation;
+        if (file.status === FileStatus.added) {
+            return LabelType.newTranslation;
+        }
+        if ([FileStatus.modified, FileStatus.removed, FileStatus.renamed].includes(file.status)) {
+            return LabelType.translationEdit;
+        }
     }
     if (communityRegex.test(file.filename) || (file.previous_filename && communityRegex.test(file.previous_filename))) {
         return LabelType.community;
