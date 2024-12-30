@@ -27,7 +27,7 @@ describe('getFileLabel', () => {
 
   describe('when a translation page is changed', () => {
     describe('and the status is added', () => {
-      it('should return new command label', () => {
+      it('should return new translation label', () => {
         expect(getFileLabel({
           filename: 'pages.de/common/git.md',
           status: FileStatus.added,
