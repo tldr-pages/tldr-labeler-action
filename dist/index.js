@@ -29932,7 +29932,8 @@ var LabelType;
     LabelType["newCommand"] = "new command";
     LabelType["pageEdit"] = "page edit";
     LabelType["tooling"] = "tooling";
-    LabelType["translation"] = "translation";
+    LabelType["newTranslation"] = "new translation";
+    LabelType["translationEdit"] = "translation edit";
     LabelType["waiting"] = "waiting";
 })(LabelType || (exports.LabelType = LabelType = {}));
 const communityRegex = /^MAINTAINERS\.md$|^\.github\/CODEOWNERS$/;
@@ -29983,7 +29984,12 @@ const getFileLabel = (file) => {
         }
     }
     if (translationPageRegex.test(file.filename) || (file.previous_filename && translationPageRegex.test(file.previous_filename))) {
-        return LabelType.translation;
+        if (file.status === FileStatus.added) {
+            return LabelType.newTranslation;
+        }
+        if ([FileStatus.modified, FileStatus.removed, FileStatus.renamed].includes(file.status)) {
+            return LabelType.translationEdit;
+        }
     }
     if (communityRegex.test(file.filename) || (file.previous_filename && communityRegex.test(file.previous_filename))) {
         return LabelType.community;
