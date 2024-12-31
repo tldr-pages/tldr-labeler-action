@@ -42,7 +42,11 @@ export interface PrMetadata {
 }
 
 export interface PrReviewer {
-  names: string[]
+  login: string
+}
+
+export interface PrReviewers {
+  users: PrReviewer[]
 }
 
 const communityRegex = /^MAINTAINERS\.md$|^\.github\/CODEOWNERS$/;
@@ -72,14 +76,14 @@ const getPrLabels = async (octokit: Octokit, prNumber: number): Promise<string[]
 };
 
 const getPrReviewers = async (octokit: Octokit, prNumber: number): Promise<string[]> => {
-  const getPrOptions = octokit.rest.pulls.listReviews.endpoint.merge({
+  const getPrOptions = octokit.rest.pulls.listRequestedReviewers.endpoint.merge({
     owner: context.repo.owner,
     repo: context.repo.repo,
     pull_number: prNumber,
   });
 
-  const prResponse = await octokit.request<PrReviewer>(getPrOptions);
-  return uniq(prResponse.data.names);
+  const prResponse = await octokit.request<PrReviewers>(getPrOptions);
+  return uniq(prResponse.data.users.map((user) => user.login));
 };
 
 const addLabels = async (

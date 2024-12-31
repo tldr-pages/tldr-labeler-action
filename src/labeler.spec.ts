@@ -148,7 +148,7 @@ describe('getReviewNeededLabel', () => {
     const mockOctokit = {
       rest: {
         pulls: {
-          listReviews: {
+          listRequestedReviewers: {
             endpoint: {
               merge: jest.fn().mockReturnValue({})
             }
@@ -157,7 +157,7 @@ describe('getReviewNeededLabel', () => {
       },
       request: jest.fn().mockResolvedValue({
         data: {
-          names: []
+          users: []
         }
       })
     };
@@ -169,7 +169,7 @@ describe('getReviewNeededLabel', () => {
     const mockOctokit = {
       rest: {
         pulls: {
-          listReviews: {
+          listRequestedReviewers: {
             endpoint: {
               merge: jest.fn().mockReturnValue({})
             }
@@ -178,7 +178,7 @@ describe('getReviewNeededLabel', () => {
       },
       request: jest.fn().mockResolvedValue({
         data: {
-          names: ['reviewer1', 'reviewer2']
+          users: [ {login: 'reviewer1'}, {login: 'reviewer2'} ]
         }
       })
     };

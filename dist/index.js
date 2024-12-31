@@ -29960,13 +29960,13 @@ const getPrLabels = async (octokit, prNumber) => {
     return (0, util_1.uniq)(prResponse.data.labels.map((label) => label.name));
 };
 const getPrReviewers = async (octokit, prNumber) => {
-    const getPrOptions = octokit.rest.pulls.listReviews.endpoint.merge({
+    const getPrOptions = octokit.rest.pulls.listRequestedReviewers.endpoint.merge({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
         pull_number: prNumber,
     });
     const prResponse = await octokit.request(getPrOptions);
-    return (0, util_1.uniq)(prResponse.data.names);
+    return (0, util_1.uniq)(prResponse.data.users.map((user) => user.login));
 };
 const addLabels = async (octokit, prNumber, labels) => {
     await octokit.rest.issues.addLabels({
