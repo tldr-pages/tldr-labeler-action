@@ -21,6 +21,7 @@ export enum LabelType {
   newTranslation = 'new translation',
   translationEdit = 'translation edit',
   waiting = 'waiting',
+  reviewNeeded  = 'review needed',
 }
 
 export interface PrFile {
@@ -38,6 +39,14 @@ export interface PrLabel {
 
 export interface PrMetadata {
   labels: PrLabel[]
+}
+
+export interface PrReviewer {
+  login: string
+}
+
+export interface PrReviewers {
+  users: PrReviewer[]
 }
 
 const communityRegex = /^MAINTAINERS\.md$|^\.github\/CODEOWNERS$/;
@@ -64,6 +73,17 @@ const getPrLabels = async (octokit: Octokit, prNumber: number): Promise<string[]
 
   const prResponse = await octokit.request<PrMetadata>(getPrOptions);
   return uniq(prResponse.data.labels.map((label) => label.name));
+};
+
+const getPrReviewers = async (octokit: Octokit, prNumber: number): Promise<string[]> => {
+  const getPrOptions = octokit.rest.pulls.listRequestedReviewers.endpoint.merge({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    pull_number: prNumber,
+  });
+
+  const prResponse = await octokit.request<PrReviewers>(getPrOptions);
+  return uniq(prResponse.data.users.map((user) => user.login));
 };
 
 const addLabels = async (
@@ -136,6 +156,16 @@ export const getMassChangesLabel = (changedFiles: PrFile[]): string | null => {
   return null;
 };
 
+export const getReviewNeededLabel = async (octokit: Octokit, prNumber: number): Promise<string | null> => {
+  const reviewers = await getPrReviewers(octokit, prNumber);
+
+  if (reviewers.length === 0) {
+    return LabelType.reviewNeeded;
+  }
+
+  return null;
+};
+
 export const main = async (): Promise<void> => {
   const token = getInput('token', { required: true });
 
@@ -155,6 +185,11 @@ export const main = async (): Promise<void> => {
   const massChangesLabel = getMassChangesLabel(changedFiles);
   if (massChangesLabel) {
     labels.push(massChangesLabel);
+  }
+
+  const reviewNeededLabel = await getReviewNeededLabel(octokit, prNumber);
+  if (reviewNeededLabel) {
+    labels.push(reviewNeededLabel);
   }
 
   const prLabels = await getPrLabels(octokit, prNumber);

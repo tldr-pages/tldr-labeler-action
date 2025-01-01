@@ -1,4 +1,4 @@
-import {FileStatus, getFileLabel, getMassChangesLabel, LabelType} from './labeler';
+import {FileStatus, getFileLabel, getMassChangesLabel, getReviewNeededLabel, LabelType} from './labeler';
 
 describe('getFileLabel', () => {
   describe('when a main page is changed', () => {
@@ -126,5 +126,63 @@ describe('getMassChangesLabel', () => {
       ...Array(10).fill({ filename: 'pages.de/common/git.md', status: FileStatus.modified })
     ];
     expect(getMassChangesLabel(changedFiles)).toBeNull();
+  });
+});
+
+describe('getReviewNeededLabel', () => {
+  const originalEnv = process.env.GITHUB_REPOSITORY;
+
+  beforeEach(() => {
+    process.env.GITHUB_REPOSITORY = 'tldr-pages/tldr';
+  });
+
+  afterEach(() => {
+    if (originalEnv) {
+      process.env.GITHUB_REPOSITORY = originalEnv;
+    } else {
+      delete process.env.GITHUB_REPOSITORY;
+    }
+  });
+
+  it('should return review needed label when there are no reviewers', async () => {
+    const mockOctokit = {
+      rest: {
+        pulls: {
+          listRequestedReviewers: {
+            endpoint: {
+              merge: jest.fn().mockReturnValue({})
+            }
+          }
+        }
+      },
+      request: jest.fn().mockResolvedValue({
+        data: {
+          users: []
+        }
+      })
+    };
+
+    expect(await getReviewNeededLabel(mockOctokit as any, 123)).toBe(LabelType.reviewNeeded);
+  });
+
+  it('should return null when there are reviewers', async () => {
+    const mockOctokit = {
+      rest: {
+        pulls: {
+          listRequestedReviewers: {
+            endpoint: {
+              merge: jest.fn().mockReturnValue({})
+            }
+          }
+        }
+      },
+      request: jest.fn().mockResolvedValue({
+        data: {
+          users: [ {login: 'reviewer1'}, {login: 'reviewer2'} ]
+        }
+      })
+    };
+
+    expect(await getReviewNeededLabel(mockOctokit as any, 123)).toBeNull();
   });
 });

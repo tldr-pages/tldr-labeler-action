@@ -29913,7 +29913,7 @@ function wrappy (fn, cb) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = exports.main = exports.getMassChangesLabel = exports.getFileLabel = exports.LabelType = exports.FileStatus = void 0;
+exports.run = exports.main = exports.getReviewNeededLabel = exports.getMassChangesLabel = exports.getFileLabel = exports.LabelType = exports.FileStatus = void 0;
 const core_1 = __nccwpck_require__(7484);
 const github_1 = __nccwpck_require__(3228);
 const util_1 = __nccwpck_require__(4527);
@@ -29935,6 +29935,7 @@ var LabelType;
     LabelType["newTranslation"] = "new translation";
     LabelType["translationEdit"] = "translation edit";
     LabelType["waiting"] = "waiting";
+    LabelType["reviewNeeded"] = "review needed";
 })(LabelType || (exports.LabelType = LabelType = {}));
 const communityRegex = /^MAINTAINERS\.md$|^\.github\/CODEOWNERS$/;
 const documentationRegex = /\.md$/i;
@@ -29957,6 +29958,15 @@ const getPrLabels = async (octokit, prNumber) => {
     });
     const prResponse = await octokit.request(getPrOptions);
     return (0, util_1.uniq)(prResponse.data.labels.map((label) => label.name));
+};
+const getPrReviewers = async (octokit, prNumber) => {
+    const getPrOptions = octokit.rest.pulls.listRequestedReviewers.endpoint.merge({
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
+        pull_number: prNumber,
+    });
+    const prResponse = await octokit.request(getPrOptions);
+    return (0, util_1.uniq)(prResponse.data.users.map((user) => user.login));
 };
 const addLabels = async (octokit, prNumber, labels) => {
     await octokit.rest.issues.addLabels({
@@ -30012,6 +30022,14 @@ const getMassChangesLabel = (changedFiles) => {
     return null;
 };
 exports.getMassChangesLabel = getMassChangesLabel;
+const getReviewNeededLabel = async (octokit, prNumber) => {
+    const reviewers = await getPrReviewers(octokit, prNumber);
+    if (reviewers.length === 0) {
+        return LabelType.reviewNeeded;
+    }
+    return null;
+};
+exports.getReviewNeededLabel = getReviewNeededLabel;
 const main = async () => {
     const token = (0, core_1.getInput)('token', { required: true });
     const prNumber = github_1.context.payload.pull_request?.number;
@@ -30025,6 +30043,10 @@ const main = async () => {
     const massChangesLabel = (0, exports.getMassChangesLabel)(changedFiles);
     if (massChangesLabel) {
         labels.push(massChangesLabel);
+    }
+    const reviewNeededLabel = await (0, exports.getReviewNeededLabel)(octokit, prNumber);
+    if (reviewNeededLabel) {
+        labels.push(reviewNeededLabel);
     }
     const prLabels = await getPrLabels(octokit, prNumber);
     const labelsToAdd = labels.filter((label) => !prLabels.includes(label));
