@@ -213,8 +213,6 @@ export const main = async (): Promise<void> => {
   const labelsToAdd = labels.filter((label) => !prLabels.includes(label));
   const extraPrLabels = prLabels.filter((label) => !labels.includes(label));
 
-  console.log(`PR labels: ${prLabels.join(', ')}`)
-
   if (labelsToAdd.length) {
     console.log(`Labels to add: ${labelsToAdd.join(', ')}`)
     await addLabels(octokit, prNumber, labelsToAdd);
