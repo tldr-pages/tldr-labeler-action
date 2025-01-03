@@ -29942,6 +29942,14 @@ const documentationRegex = /\.md$/i;
 const mainPageRegex = /^pages\//;
 const toolingRegex = /\.([jt]s|py|sh|yml|json)$/;
 const translationPageRegex = /^pages\.[a-z_]+\//i;
+const getPrDraftStatus = async (octokit, prNumber) => {
+    const response = await octokit.rest.pulls.get({
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
+        pull_number: prNumber,
+    });
+    return response.data.draft || false;
+};
 const getChangedFiles = async (octokit, prNumber) => {
     const listFilesOptions = octokit.rest.pulls.listFiles.endpoint.merge({
         owner: github_1.context.repo.owner,
@@ -30038,6 +30046,11 @@ const main = async () => {
         return;
     }
     const octokit = (0, github_1.getOctokit)(token);
+    const isDraft = await getPrDraftStatus(octokit, prNumber);
+    if (isDraft) {
+        console.log('PR is in draft mode, skipping');
+        return;
+    }
     const changedFiles = await getChangedFiles(octokit, prNumber);
     const labels = (0, util_1.uniq)(changedFiles.map(file => (0, exports.getFileLabel)(file)).filter((label) => label !== null));
     const massChangesLabel = (0, exports.getMassChangesLabel)(changedFiles);
@@ -30051,6 +30064,7 @@ const main = async () => {
     const prLabels = await getPrLabels(octokit, prNumber);
     const labelsToAdd = labels.filter((label) => !prLabels.includes(label));
     const extraPrLabels = prLabels.filter((label) => !labels.includes(label));
+    console.log(`PR labels: ${prLabels.join(', ')}`);
     if (labelsToAdd.length) {
         console.log(`Labels to add: ${labelsToAdd.join(', ')}`);
         await addLabels(octokit, prNumber, labelsToAdd);
