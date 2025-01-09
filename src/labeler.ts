@@ -1,6 +1,6 @@
 import {getInput, error, setFailed} from '@actions/core';
 import {context, getOctokit} from '@actions/github';
-import {uniq} from './util'
+import {uniq} from './util';
 
 type Octokit = ReturnType<typeof getOctokit>;
 
@@ -54,6 +54,16 @@ const documentationRegex = /\.md$/i;
 const mainPageRegex = /^pages\//;
 const toolingRegex = /\.([jt]s|py|sh|yml|json)$/;
 const translationPageRegex = /^pages\.[a-z_]+\//i;
+
+const getPrDraftStatus = async (octokit: Octokit, prNumber: number): Promise<boolean> => {
+  const response = await octokit.rest.pulls.get({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    pull_number: prNumber,
+  });
+
+  return response.data.draft || false;
+};
 
 const getChangedFiles = async (octokit: Octokit, prNumber: number) => {
   const listFilesOptions = octokit.rest.pulls.listFiles.endpoint.merge({
@@ -176,6 +186,13 @@ export const main = async (): Promise<void> => {
   }
 
   const octokit: Octokit = getOctokit(token);
+
+  const isDraft = await getPrDraftStatus(octokit, prNumber);
+  if (isDraft) {
+    console.log('PR is in draft mode, skipping');
+    return;
+  }
+
   const changedFiles = await getChangedFiles(octokit, prNumber);
 
   const labels = uniq(
