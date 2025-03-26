@@ -14,7 +14,7 @@ jobs:
   labeler:
     runs-on: ubuntu-latest
     steps:
-    - uses: tldr-pages/tldr-labeler-action@vX.Y.Z
+    - uses: tldr-pages/tldr-labeler-action@7cb29444b818130fe056b7e7b3dedcc7db93af45 # v0.6.0
       with:
         token: "${{ secrets.GITHUB_TOKEN }}"
 ```
