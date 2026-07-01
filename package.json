@@ -24,7 +24,7 @@
   "homepage": "https://github.com/tldr-pages/tldr-labeler-action",
   "dependencies": {
     "@actions/core": "^2.0.1",
-    "@actions/github": "^6.0.1"
+    "@actions/github": "^9.1.1"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
