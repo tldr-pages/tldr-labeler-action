@@ -27,13 +27,13 @@
     "@actions/github": "^6.0.1"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
+    "@types/jest": "^31.0.0",
     "@types/node": "^25.9.1",
     "@vercel/ncc": "^0.44.1",
     "husky": "^9.1.7",
     "jest": "^30.4.2",
-    "ts-jest": "^29.4.12",
-    "ts-node": "^10.9.2",
+    "ts-jest": "^30.0.0",
+    "ts-node": "^11.0.0",
     "typescript": "^7.0.2"
   },
   "jest": {
