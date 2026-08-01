@@ -27,7 +27,7 @@
     "@actions/github": "^6.0.1"
   },
   "devDependencies": {
-    "@types/jest": "^31.0.0",
+    "@types/jest": "^30.4.1",
     "@types/node": "^25.9.1",
     "@vercel/ncc": "^0.44.1",
     "husky": "^9.1.7",
