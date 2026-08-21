@@ -4,7 +4,7 @@
   "description": "Action to handle automatic PR labeling",
   "main": "dist/index.js",
   "scripts": {
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js",
     "prepare": "husky"
   },
@@ -24,7 +24,7 @@
   "homepage": "https://github.com/tldr-pages/tldr-labeler-action",
   "dependencies": {
     "@actions/core": "^2.0.1",
-    "@actions/github": "^6.0.1"
+    "@actions/github": "^9.1.1"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
@@ -40,7 +40,7 @@
     "clearMocks": true,
     "coverageProvider": "v8",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.ts$": "ts-jest"
     }
   }
 }
