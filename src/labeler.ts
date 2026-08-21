@@ -1,8 +1,14 @@
-import {getInput, error, setFailed} from '@actions/core';
-import {context, getOctokit} from '@actions/github';
 import {uniq} from './util';
 
-type Octokit = ReturnType<typeof getOctokit>;
+// @actions/core and @actions/github are published as ESM-only packages,
+// which a static import can't resolve from this CommonJS build; import
+// them dynamically instead.
+const core = () => import('@actions/core');
+const github = () => import('@actions/github');
+const getContext = async () => (await github()).context;
+
+type GitHubModule = Awaited<ReturnType<typeof github>>;
+type Octokit = ReturnType<GitHubModule['getOctokit']>;
 
 export enum FileStatus {
   added = 'added',
@@ -56,6 +62,7 @@ const toolingRegex = /\.([jt]s|py|sh|yml|json)$/;
 const translationPageRegex = /^pages\.[a-z_]+\//i;
 
 const getPrDraftStatus = async (octokit: Octokit, prNumber: number): Promise<boolean> => {
+  const context = await getContext();
   const response = await octokit.rest.pulls.get({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -66,6 +73,7 @@ const getPrDraftStatus = async (octokit: Octokit, prNumber: number): Promise<boo
 };
 
 const getChangedFiles = async (octokit: Octokit, prNumber: number) => {
+  const context = await getContext();
   const listFilesOptions = octokit.rest.pulls.listFiles.endpoint.merge({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -75,6 +83,7 @@ const getChangedFiles = async (octokit: Octokit, prNumber: number) => {
 };
 
 const getPrLabels = async (octokit: Octokit, prNumber: number): Promise<string[]> => {
+  const context = await getContext();
   const getPrOptions = octokit.rest.pulls.get.endpoint.merge({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -86,6 +95,7 @@ const getPrLabels = async (octokit: Octokit, prNumber: number): Promise<string[]
 };
 
 const getPrReviewers = async (octokit: Octokit, prNumber: number): Promise<string[]> => {
+  const context = await getContext();
   const getPrOptions = octokit.rest.pulls.listRequestedReviewers.endpoint.merge({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -101,6 +111,7 @@ const addLabels = async (
   prNumber: number,
   labels: string[],
 ): Promise<void> => {
+  const context = await getContext();
   await octokit.rest.issues.addLabels({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -114,6 +125,7 @@ const removeLabels = async (
   prNumber: number,
   labels: string[],
 ): Promise<void> => {
+  const context = await getContext();
   await Promise.all(
     labels.map((name) =>
       octokit.rest.issues.removeLabel({
@@ -177,6 +189,9 @@ export const getReviewNeededLabel = async (octokit: Octokit, prNumber: number): 
 };
 
 export const main = async (): Promise<void> => {
+  const {getInput} = await core();
+  const gitHub = await github();
+  const context = gitHub.context;
   const token = getInput('token', { required: true });
 
   const prNumber = context.payload.pull_request?.number;
@@ -185,7 +200,7 @@ export const main = async (): Promise<void> => {
     return;
   }
 
-  const octokit: Octokit = getOctokit(token);
+  const octokit: Octokit = gitHub.getOctokit(token);
 
   const isDraft = await getPrDraftStatus(octokit, prNumber);
   if (isDraft) {
@@ -227,6 +242,7 @@ export const run = async (): Promise<void> => {
   try {
     await main();
   } catch (err) {
+    const {error, setFailed} = await core();
     error(err as Error);
     setFailed((err as Error).message);
   }
