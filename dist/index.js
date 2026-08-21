@@ -43084,13 +43084,21 @@ var require_github = __commonJS({
   }
 });
 
+// src/esmDeps.js
+var require_esmDeps = __commonJS({
+  "src/esmDeps.js"(exports2, module2) {
+    "use strict";
+    module2.exports.loadCore = () => Promise.resolve().then(() => __toESM(require_core()));
+    module2.exports.loadGithub = () => Promise.resolve().then(() => __toESM(require_github()));
+  }
+});
+
 // src/util.ts
 var uniq = (array) => Array.from(new Set(array));
 
 // src/labeler.ts
-var core = () => Promise.resolve().then(() => __toESM(require_core()));
-var github = () => Promise.resolve().then(() => __toESM(require_github()));
-var getContext = async () => (await github()).context;
+var import_esmDeps = __toESM(require_esmDeps());
+var getContext = async () => (await (0, import_esmDeps.loadGithub)()).context;
 var communityRegex = /^MAINTAINERS\.md$|^\.github\/CODEOWNERS$/;
 var documentationRegex = /\.md$/i;
 var mainPageRegex = /^pages\//;
@@ -43200,8 +43208,8 @@ var getReviewNeededLabel = async (octokit, prNumber) => {
   return null;
 };
 var main = async () => {
-  const { getInput } = await core();
-  const gitHub = await github();
+  const { getInput } = await (0, import_esmDeps.loadCore)();
+  const gitHub = await (0, import_esmDeps.loadGithub)();
   const context = gitHub.context;
   const token = getInput("token", { required: true });
   const prNumber = context.payload.pull_request?.number;
@@ -43243,7 +43251,7 @@ var run = async () => {
   try {
     await main();
   } catch (err) {
-    const { error, setFailed } = await core();
+    const { error, setFailed } = await (0, import_esmDeps.loadCore)();
     error(err);
     setFailed(err.message);
   }

@@ -1,10 +1,6 @@
 import {uniq} from './util';
+import {loadCore as core, loadGithub as github} from './esmDeps';
 
-// @actions/core and @actions/github are published as ESM-only packages,
-// which a static import can't resolve from this CommonJS build; import
-// them dynamically instead.
-const core = () => import('@actions/core');
-const github = () => import('@actions/github');
 const getContext = async () => (await github()).context;
 
 type GitHubModule = Awaited<ReturnType<typeof github>>;

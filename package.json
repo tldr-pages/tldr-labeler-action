@@ -4,7 +4,7 @@
   "description": "Action to handle automatic PR labeling",
   "main": "dist/index.js",
   "scripts": {
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js",
     "prepare": "husky"
   },
@@ -40,7 +40,7 @@
     "clearMocks": true,
     "coverageProvider": "v8",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.ts$": "ts-jest"
     }
   }
 }
