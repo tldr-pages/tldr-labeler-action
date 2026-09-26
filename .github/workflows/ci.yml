@@ -28,3 +28,8 @@ jobs:
 
     - name: Build
       run: npm run build
+
+    - name: Check dist is up to date
+      run: |
+        git status
+        exit $(git status --porcelain=v1 -- dist/ | grep -c .)
