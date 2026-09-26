@@ -5,11 +5,11 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --outfile=dist/index.js",
     "prepare": "husky"
   },
   "engines": {
-    "node": ">=20",
+    "node": ">=24",
     "npm": ">=9"
   },
   "repository": {
