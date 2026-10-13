@@ -31,5 +31,8 @@ jobs:
 
     - name: Check dist is up to date
       run: |
-        git status
-        exit $(git status --porcelain=v1 -- dist/ | grep -c .)
+        git status --short -- dist/
+        test -z "$(git status --porcelain=v1 -- dist/)" || {
+          echo "::error::dist/ is out of date. Run 'npm run build' and commit the result."
+          exit 1
+        }
