@@ -28,11 +28,11 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.6.3",
     "esbuild": "^0.28.2",
     "husky": "^9.1.7",
-    "jest": "^30.5.0",
-    "ts-jest": "^29.4.12",
+    "jest": "^30.5.2",
+    "ts-jest": "^29.4.14",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
